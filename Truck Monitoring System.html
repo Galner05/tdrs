@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDRS - Advanced Truck Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    /* CSS remains the same as original */
+    :root {
+      --bg-color: #f0f4f8;
+      --header-color: #2c3e50;
+      --card-color: #ffffff;
+      --accent-color: #3498db;
+      --button-color: #3498db;
+      --button-hover: #2980b9;
+      --success-color: #27ae60;
+      --warning-color: #e74c3c;
+      --pending-color: #f39c12;
+      --sent-color: #3498db;
+      --paid-color: #27ae60;
+      --overdue-color: #e74c3c;
+      --wcv6-color: #8e44ad;
+      --wcv4-color: #3498db;
+      --text-color: #2c3e50;
+      --subtle-text: #7f8c8d;
+      --row-color1: #f8f9fa;
+      --row-color2: #e9ecef;
+      --status-bar-color: #d6dbdf;
+      --operator-color: #9b59b6;
+      --driver-color: #3498db;
+      --bank-color: #27ae60;
+      --phone-color: #e67e22;
+      --specs-color: #8e44ad;
+      --maintenance-color: #f39c12;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+      --soa-header: #2c3e50;
+      --inactive-bg: #f8f9fa;
+      --inactive-border: #e9ecef;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header Styles */
+    header {
+      background: linear-gradient(135deg, #2c3e50, #1a2530);
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--box-shadow);
+      z-index: 100;
+      position: sticky;
+      top: 0;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo i {
+      color: var(--accent-color);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .datetime {
+      font-size: 13px;
+      margin-bottom: 3px;
+      color: #e0e0e0;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+    }
+
+    .indicator-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--success-color);
+      box-shadow: 0 0 6px var(--success-color);
+    }
+
+    /* Control Panel */
+    .control-panel {
+      background: linear-gradient(to right, #f8f9fa, #e9ecef);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .btn-primary {
+      background: linear-gradient(to bottom, var(--button-color), #2a80b9);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(to bottom, var(--warning-color), #c0392b);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(to bottom, var(--success-color), #219653);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(to bottom, var(--subtle-text), #5d6d74);
+      color: white;
+    }
+
+    .btn-warning {
+      background: linear-gradient(to bottom, var(--pending-color), #e67e22);
+      color: white;
+    }
+
+    .btn-operator {
+      background: linear-gradient(to bottom, var(--operator-color), #8e44ad);
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 15px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      background-color: #f8f9fa;
+      border-radius: var(--border-radius);
+      padding: 4px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #d6dbdf;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 110px;
+      transition: var(--transition);
+      font-size: 14px;
+    }
+
+    .tab:hover {
+      background-color: #c8d0d8;
+    }
+
+    .tab.active {
+      background-color: var(--card-color);
+      border-bottom: 1px solid var(--card-color);
+      margin-bottom: -1px;
+      color: var(--accent-color);
+    }
+
+    .tab.active i {
+      color: var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--box-shadow);
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Dashboard */
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 180px;
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      text-align: center;
+      box-shadow: var(--box-shadow);
+      border-top: 3px solid;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card.total {
+      border-top-color: var(--accent-color);
+    }
+
+    .stat-card.active {
+      border-top-color: var(--success-color);
+    }
+
+    .stat-card.inactive {
+      border-top-color: var(--warning-color);
+    }
+
+    .stat-card.operators {
+      border-top-color: var(--operator-color);
+    }
+
+    .stat-card.drivers {
+      border-top-color: var(--driver-color);
+    }
+
+    .stat-title {
+      color: var(--subtle-text);
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 8px 0;
+    }
+
+    .charts-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .chart-container {
+      flex: 1;
+      min-width: 280px;
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-title i {
+      color: var(--accent-color);
+    }
+
+    .chart {
+      height: 260px;
+      position: relative;
+    }
+
+    /* Inactive Trucks Section */
+    .inactive-section {
+      background-color: var(--inactive-bg);
+      border: 1px solid var(--inactive-border);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-top: 20px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .inactive-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--inactive-border);
+    }
+
+    .inactive-header h2 {
+      font-size: 18px;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .inactive-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .inactive-truck {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .inactive-truck:last-child {
+      border-bottom: none;
+    }
+
+    .truck-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .truck-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #3498db;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .truck-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .truck-plate {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .truck-operator {
+      font-size: 13px;
+      color: var(--subtle-text);
+    }
+
+    .reactivate-btn {
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      transition: var(--transition);
+    }
+
+    .reactivate-btn:hover {
+      background-color: #219653;
+    }
+
+    /* Truck List */
+    .truck-list-container {
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--box-shadow);
+      overflow-x: auto;
+      max-height: 60vh;
+      position: relative;
+    }
+
+    .truck-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1000px;
+    }
+
+    .truck-table th {
+      background: linear-gradient(to bottom, var(--header-color), #1a2530);
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      font-size: 14px;
+    }
+
+    .truck-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .truck-table tbody tr:nth-child(even) {
+      background-color: var(--row-color1);
+    }
+
+    .truck-table tbody tr:nth-child(odd) {
+      background-color: var(--row-color2);
+    }
+
+    .truck-table tbody tr:hover {
+      background-color: #e3f2fd;
+      cursor: pointer;
+    }
+
+    .truck-table tbody tr.selected {
+      background-color: #d1ecf1;
+      box-shadow: inset 0 0 0 2px var(--accent-color);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+      text-align: center;
+      min-width: 70px;
+      font-size: 13px;
+    }
+
+    .status-active {
+      background-color: var(--success-color);
+      color: white;
+      box-shadow: 0 1px 3px rgba(39, 174, 96, 0.3);
+    }
+
+    .status-inactive {
+      background-color: var(--warning-color);
+      color: white;
+      box-shadow: 0 1px 3px rgba(231, 76, 60, 0.3);
+    }
+
+    .toggle-btn {
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+    }
+
+    .toggle-btn i {
+      font-size: 12px;
+    }
+
+    .toggle-active {
+      background-color: var(--warning-color);
+    }
+
+    .toggle-inactive {
+      background-color: var(--success-color);
+    }
+
+    .delete-btn {
+      background-color: #e74c3c;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background-color 0.2s;
+      font-size: 13px;
+    }
+
+    .delete-btn:hover {
+      background-color: #c0392b;
+    }
+
+    /* Activity Log */
+    .log-container {
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--box-shadow);
+      display: flex;
+      flex-direction: column;
+      height: 450px;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .log-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .log-content {
+      flex: 1;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: var(--border-radius);
+      padding: 12px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 13px;
+      background: linear-gradient(to bottom, #f9f9f9, #f0f0f0);
+    }
+
+    .log-entry {
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+    }
+
+    .log-timestamp {
+      color: var(--subtle-text);
+      font-weight: 500;
+      margin-right: 8px;
+      min-width: 110px;
+      font-size: 12px;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      background: linear-gradient(to right, var(--status-bar-color), #cbd2d9);
+      padding: 8px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      width: 90%;
+      max-width: 750px;
+      overflow: hidden;
+      animation: modalAppear 0.3s ease;
+    }
+
+    @keyframes modalAppear {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      background: linear-gradient(to right, var(--header-color), #1a2530);
+      color: white;
+      padding: 12px 18px;
+      font-size: 17px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .modal-close:hover {
+      transform: scale(1.1);
+    }
+
+    .modal-body {
+      padding: 18px;
+      max-height: 65vh;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: var(--text-color);
+      font-size: 14px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 15px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 18px;
+      background-color: #f8f9fa;
+      gap: 8px;
+    }
+
+    /* Excel Data Viewer */
+    .excel-viewer {
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--box-shadow);
+      overflow-x: auto;
+      max-height: 65vh;
+      position: relative;
+    }
+
+    .excel-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1200px;
+    }
+
+    .excel-table th {
+      background: linear-gradient(to bottom, var(--header-color), #1a2530);
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      font-size: 13px;
+    }
+
+    .excel-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+    }
+
+    .excel-table tbody tr:nth-child(even) {
+      background-color: var(--row-color1);
+    }
+
+    .excel-table tbody tr:nth-child(odd) {
+      background-color: var(--row-color2);
+    }
+
+    .excel-table tbody tr:hover {
+      background-color: #e3f2fd;
+    }
+
+    .highlight-cell {
+      background-color: #fff3cd !important;
+    }
+
+    .pending-cell {
+      background-color: #d1ecf1 !important;
+    }
+
+    /* Status badges */
+    .status-badge-pending {
+      background-color: var(--pending-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .status-badge-sent {
+      background-color: var(--sent-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .status-badge-paid {
+      background-color: var(--paid-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .status-badge-overdue {
+      background-color: var(--overdue-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    /* Editable cells */
+    .editable-cell {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .editable-cell:hover {
+      background-color: #f0f8ff;
+      border-color: #3498db;
+    }
+
+    .editable-cell:focus {
+      outline: none;
+      background-color: #fff;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .save-btn {
+      padding: 5px 10px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: background-color 0.2s;
+    }
+
+    .save-btn:hover {
+      background-color: #219653;
+    }
+
+    .add-trip-btn {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      transition: var(--transition);
+      font-size: 14px;
+    }
+
+    .add-trip-btn:hover {
+      background-color: var(--button-hover);
+      transform: translateY(-2px);
+    }
+
+    /* Vehicle type badges */
+    .wcv6-badge {
+      background-color: var(--wcv6-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      display: inline-block;
+    }
+
+    .wcv4-badge {
+      background-color: var(--wcv4-color);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      display: inline-block;
+    }
+
+    .rate-cell {
+      background-color: #e8f5e9;
+      font-weight: 600;
+      color: #2e7d32;
+      text-align: right;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+
+    /* Rate info */
+    .rate-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      background: linear-gradient(to right, #e3f2fd, #bbdefb);
+      border-radius: var(--border-radius);
+      margin-top: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .rate-info .rate-value {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 30px 15px;
+      color: var(--subtle-text);
+    }
+
+    .empty-state i {
+      font-size: 40px;
+      margin-bottom: 12px;
+      color: #d1d8e0;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .empty-state p {
+      margin-bottom: 15px;
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 14px;
+    }
+
+    /* SOA Table Styles */
+    .soa-container {
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .soa-header {
+      text-align: center;
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .soa-header h2 {
+      color: var(--header-color);
+      font-size: 22px;
+    }
+
+    .soa-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .soa-table th {
+      background-color: var(--soa-header);
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .soa-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .soa-table tr:nth-child(even) {
+      background-color: var(--row-color1);
+    }
+
+    .soa-table tr:nth-child(odd) {
+      background-color: var(--row-color2);
+    }
+
+    .soa-table tr:last-child {
+      font-weight: bold;
+      background-color: #e3f2fd;
+      border-top: 2px solid var(--accent-color);
+    }
+
+    .soa-input {
+      width: 100%;
+      padding: 7px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+      text-align: right;
+      font-size: 14px;
+    }
+
+    .soa-input:focus {
+      border-color: var(--accent-color);
+      outline: none;
+    }
+
+    .soa-total {
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    .soa-label {
+      font-weight: 500;
+    }
+
+    .soa-subrow {
+      padding-left: 25px;
+    }
+
+    .soa-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .soa-generate-btn {
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      font-size: 14px;
+    }
+
+    .soa-generate-btn:hover {
+      background-color: #219653;
+      transform: translateY(-2px);
+    }
+
+    .soa-download-btn {
+      background-color: #9b59b6;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      font-size: 14px;
+    }
+
+    .soa-download-btn:hover {
+      background-color: #8e44ad;
+      transform: translateY(-2px);
+    }
+
+    /* SOA Date Range */
+    .soa-date-range {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .soa-date-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .soa-date-group label {
+      font-weight: 500;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .soa-operator-row {
+      margin-bottom: 15px;
+    }
+
+    /* Hide rate rows */
+    .rate-row {
+      display: none;
+    }
+
+    /* Highlight cash advance */
+    .cash-advance-row td {
+      background-color: #fde8e8;
+    }
+
+    .soa-total-row {
+      font-weight: bold;
+      background-color: #e3f2fd;
+      border-top: 2px solid var(--accent-color);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 15px;
+      align-items: center;
+    }
+
+    .pagination-btn {
+      padding: 6px 12px;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .pagination-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: var(--text-color);
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .stats-row, .charts-row {
+        flex-direction: column;
+      }
+
+      .tabs {
+        flex-wrap: wrap;
+      }
+
+      .tab {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        min-width: 90px;
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .modal-content {
+        width: 95%;
+      }
+
+      .header-right {
+        display: none;
+      }
+
+      .soa-date-range {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .soa-actions {
+        flex-direction: column;
+      }
+
+      .logo {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- Header -->
+<header>
+  <div class="logo">
+    <i class="fas fa-truck-moving"></i>
+    <span>TDRS - Truck Management</span>
+  </div>
+  <div class="header-right">
+    <div class="datetime" id="datetime"></div>
+    <div class="status-indicator">
+      <div class="indicator-dot"></div>
+      <span>Operational</span>
+    </div>
+  </div>
+</header>
+
+<!-- Control Panel -->
+<div class="control-panel">
+  <button class="btn btn-operator" id="addTruckBtn">
+    <i class="fas fa-plus"></i> Add Truck
+  </button>
+  <button class="btn btn-danger" id="exportDataBtn">
+    <i class="fas fa-download"></i> Export Data
+  </button>
+  <button class="btn btn-primary" id="refreshBtn">
+    <i class="fas fa-sync-alt"></i> Refresh
+  </button>
+  <button class="btn btn-success" id="backupBtn">
+    <i class="fas fa-save"></i> Backup
+  </button>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="dashboard">
+      <i class="fas fa-chart-bar"></i> Dashboard
+    </div>
+    <div class="tab" data-tab="trucks">
+      <i class="fas fa-truck"></i> Truck List
+    </div>
+    <div class="tab" data-tab="excel">
+      <i class="fas fa-file-excel"></i> Trip Data
+    </div>
+    <div class="tab" data-tab="soa">
+      <i class="fas fa-file-invoice-dollar"></i> SOA
+    </div>
+    <div class="tab" data-tab="log">
+      <i class="fas fa-clipboard-list"></i> Activity Log
+    </div>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div class="tab-content active" id="dashboard-tab">
+    <div class="dashboard">
+      <div class="stats-row">
+        <div class="stat-card total">
+          <div class="stat-title">Total Trucks</div>
+          <div class="stat-value" id="totalTrucks">0</div>
+          <div><i class="fas fa-truck fa-2x" style="color: var(--accent-color);"></i></div>
+        </div>
+        <div class="stat-card active">
+          <div class="stat-title">Active Trucks</div>
+          <div class="stat-value" id="activeTrucks">0</div>
+          <div><i class="fas fa-check-circle fa-2x" style="color: var(--success-color);"></i></div>
+        </div>
+        <div class="stat-card inactive">
+          <div class="stat-title">Inactive Trucks</div>
+          <div class="stat-value" id="inactiveTrucks">0</div>
+          <div><i class="fas fa-ban fa-2x" style="color: var(--warning-color);"></i></div>
+        </div>
+        <div class="stat-card operators">
+          <div class="stat-title">Operators</div>
+          <div class="stat-value" id="totalOperators">0</div>
+          <div><i class="fas fa-user-tie fa-2x" style="color: var(--operator-color);"></i></div>
+        </div>
+        <div class="stat-card drivers">
+          <div class="stat-title">Drivers</div>
+          <div class="stat-value" id="totalDrivers">0</div>
+          <div><i class="fas fa-id-card fa-2x" style="color: var(--driver-color);"></i></div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-container">
+          <div class="chart-title">
+            <i class="fas fa-chart-pie"></i> Vehicle Type Distribution
+          </div>
+          <div class="chart">
+            <canvas id="vehicleTypeChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">
+            <i class="fas fa-chart-bar"></i> Trip Cost Analysis
+          </div>
+          <div class="chart">
+            <canvas id="costChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inactive Trucks Section -->
+      <div class="inactive-section">
+        <div class="inactive-header">
+          <h2><i class="fas fa-truck-loading"></i> Inactive Trucks</h2>
+          <span id="inactiveCount">0 Trucks</span>
+        </div>
+        <div class="inactive-list" id="inactiveTrucksList">
+          <div class="empty-state">
+            <i class="fas fa-truck-loading"></i>
+            <h3>No Inactive Trucks</h3>
+            <p>All trucks are currently active</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Truck List Tab -->
+  <div class="tab-content" id="trucks-tab">
+    <div class="truck-list-container">
+      <div class="loading-spinner" id="truckLoading">
+        <div class="spinner"></div>
+      </div>
+      <table class="truck-table">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>License Plate</th>
+          <th>Operator</th>
+          <th>Driver</th>
+          <th>Vehicle Type</th>
+          <th>Bank Account</th>
+          <th>Contact No.</th>
+          <th>Rate</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="truckListBody">
+        <tr>
+          <td colspan="10" class="empty-state">
+            <i class="fas fa-truck-loading"></i>
+            <h3>No Trucks Found</h3>
+            <p>You haven't added any trucks yet. Click the button below to get started.</p>
+            <button class="btn btn-operator" id="addTruckFromList">
+              <i class="fas fa-plus"></i> Add Your First Truck
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Excel Data Tab -->
+  <div class="tab-content" id="excel-tab">
+    <div class="excel-viewer">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="color: var(--header-color); display: flex; align-items: center; gap: 8px; font-size: 18px;">
+          <i class="fas fa-file-excel" style="color: #217346;"></i>
+          TDRS Trip Management
+        </h2>
+        <button class="add-trip-btn" id="addTripBtn">
+          <i class="fas fa-plus"></i> Add New Trip
+        </button>
+      </div>
+      <div class="loading-spinner" id="tripLoading">
+        <div class="spinner"></div>
+      </div>
+      <table class="excel-table" id="excelDataTable">
+        <thead>
+        <tr>
+          <th>SPX ID</th>
+          <th>Trip Date</th>
+          <th>Pickup</th>
+          <th>Destination Hub</th>
+          <th>Operator</th>
+          <th>Driver</th>
+          <th>Plate Number</th>
+          <th>Vehicle Type</th>
+          <th>Rate</th>
+          <th>Fuel</th>
+          <th>Parking</th>
+          <th>Tolls</th>
+          <th>2nd Trip Costs</th>
+          <th>Total Amount</th>
+          <th>Documents</th>
+          <th>2nd Trip</th>
+          <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody id="excelDataBody">
+        <tr>
+          <td colspan="17" class="empty-state">
+            <i class="fas fa-road"></i>
+            <h3>No Trip Records</h3>
+            <p>You haven't recorded any trips yet. Add your first trip to start tracking.</p>
+            <button class="btn btn-success" id="addTripFromList">
+              <i class="fas fa-plus"></i> Add Your First Trip
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <div class="pagination" id="tripPagination" style="display: none;">
+        <button class="pagination-btn" id="prevPageBtn" disabled>
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
+        <button class="pagination-btn" id="nextPageBtn" disabled>
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOA Tab -->
+  <div class="tab-content" id="soa-tab">
+    <div class="soa-container">
+      <div class="soa-header">
+        <h2><i class="fas fa-file-invoice-dollar"></i> Statement of Account (SOA)</h2>
+      </div>
+
+      <div class="soa-date-range">
+        <div class="soa-date-group">
+          <label for="soaDateFrom">Date From:</label>
+          <input type="date" id="soaDateFrom">
+        </div>
+        <div class="soa-date-group">
+          <label for="soaDateTo">Date To:</label>
+          <input type="date" id="soaDateTo">
+        </div>
+      </div>
+
+      <div class="soa-operator-row">
+        <select id="soaOperator" class="soa-operator-select">
+          <option value="">Select Operator</option>
+          <!-- Operators will be populated dynamically -->
+        </select>
+      </div>
+
+      <table class="soa-table">
+        <tbody>
+        <!-- Hidden rate rows -->
+        <tr class="rate-row">
+          <td class="soa-label">Rate:</td>
+          <td></td>
+        </tr>
+        <tr class="soa-subrow rate-row">
+          <td>4 WCV</td>
+          <td>
+            <input type="text" class="soa-input" id="rate4" value="₱2,833.33" readonly>
+          </td>
+        </tr>
+        <tr class="soa-subrow rate-row">
+          <td>6 WCV</td>
+          <td>
+            <input type="text" class="soa-input" id="rate6" value="₱3,166.67" readonly>
+          </td>
+        </tr>
+
+        <!-- Visible content -->
+        <tr>
+          <td class="soa-label">Trips per Vehicle Type:</td>
+          <td></td>
+        </tr>
+        <tr class="soa-subrow">
+          <td>4 WCV</td>
+          <td>
+            <input type="number" class="soa-input" id="trips4" value="0" min="0" readonly>
+          </td>
+        </tr>
+        <tr class="soa-subrow">
+          <td>6 WCV</td>
+          <td>
+            <input type="number" class="soa-input" id="trips6" value="0" min="0" readonly>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="soa-label">No. Of second trip</td>
+          <td></td>
+        </tr>
+        <tr class="soa-subrow">
+          <td>4 WCV</td>
+          <td>
+            <input type="number" class="soa-input" id="secondTrips4" value="0" min="0" readonly>
+          </td>
+        </tr>
+        <tr class="soa-subrow">
+          <td>6 WCV</td>
+          <td>
+            <input type="number" class="soa-input" id="secondTrips6" value="0" min="0" readonly>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="soa-label">Total Trip</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="totalTrips" value="0" readonly>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="soa-label">Toll:</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="toll" value="₱0.00" readonly>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="soa-label">Parking:</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="parking" value="₱0.00" readonly>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="soa-label">Gas:</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="gas" value="₱0.00" readonly>
+          </td>
+        </tr>
+
+        <!-- Fixed: Added Total Expenses row -->
+        <tr>
+          <td class="soa-label">Total Expenses:</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="totalExpenses" value="₱0.00" readonly>
+          </td>
+        </tr>
+
+        <tr class="cash-advance-row">
+          <td class="soa-label">Cash Advance:</td>
+          <td>
+            <input type="number" class="soa-input" id="cashAdvance" value="0.00" step="0.01" min="0" placeholder="Enter amount (will be deducted)">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="soa-label">Total Trip:</td>
+          <td></td>
+        </tr>
+        <tr class="soa-subrow">
+          <td>4 WCV</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="total4" value="₱0.00" readonly>
+          </td>
+        </tr>
+        <tr class="soa-subrow">
+          <td>6 WCV</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="total6" value="₱0.00" readonly>
+          </td>
+        </tr>
+
+        <tr class="soa-total-row">
+          <td class="soa-label">Total Payable:</td>
+          <td>
+            <input type="text" class="soa-input soa-total" id="totalPayable" value="₱0.00" readonly>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="soa-actions">
+        <button class="soa-generate-btn" id="generateSOA">
+          <i class="fas fa-calculator"></i> Generate SOA
+        </button>
+        <button class="soa-download-btn" id="downloadSOA">
+          <i class="fas fa-file-pdf"></i> Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Log Tab -->
+  <div class="tab-content" id="log-tab">
+    <div class="log-container">
+      <div class="log-header">
+        <div class="log-title">System Activity Log</div>
+        <button class="btn btn-secondary" id="clearLogBtn">
+          <i class="fas fa-trash"></i> Clear Log
+        </button>
+      </div>
+      <div class="log-content" id="logContent">
+        <div class="log-entry">
+          <span class="log-timestamp" id="initTimestamp"></span>
+          <span>System initialized - Ready to track trucks</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span id="statusText">Total Trucks: 0 | Active: 0 | Operators: 0 | Drivers: 0</span>
+  <span>System Status: <span style="color: var(--success-color);">Operational</span></span>
+</div>
+
+<!-- Add Truck Modal -->
+<div class="modal" id="addTruckModal">
+  <div class="modal-content">
+    <div class="modal-header">Add New Truck</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="licensePlate">License Plate</label>
+        <input type="text" id="licensePlate" class="form-control" placeholder="Enter license plate">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="operatorName">Operator Name</label>
+          <input type="text" id="operatorName" class="form-control" placeholder="Enter operator name">
+        </div>
+        <div class="form-group">
+          <label for="driverName">Driver Name</label>
+          <input type="text" id="driverName" class="form-control" placeholder="Enter driver name">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="bankAccount">Bank Account</label>
+          <input type="text" id="bankAccount" class="form-control" placeholder="Enter bank account number">
+        </div>
+        <div class="form-group">
+          <label for="phoneNumber">Contact Number</label>
+          <input type="text" id="phoneNumber" class="form-control" placeholder="Enter contact number">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="vehicleType">Vehicle Type</label>
+          <select id="vehicleType" class="form-control">
+            <option value="6 WCV">6 WCV</option>
+            <option value="4 WCV">4 WCV</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="truckRate">Rate (₱)</label>
+          <input type="number" id="truckRate" class="form-control" placeholder="Rate will be calculated" readonly>
+        </div>
+      </div>
+
+      <div class="rate-info">
+        <div>6 WCV: <span class="rate-value">₱3,166.67</span></div>
+        <div>4 WCV: <span class="rate-value">₱2,833.33</span></div>
+      </div>
+
+      <div class="form-group">
+        <label>Status</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" id="statusActive" name="truckStatus" value="Active" checked>
+            <label for="statusActive">Active</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" id="statusInactive" name="truckStatus" value="Inactive">
+            <label for="statusInactive">Inactive</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelAddBtn">Cancel</button>
+      <button class="btn btn-success" id="submitAddBtn">Add Truck</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Trip Modal -->
+<div class="modal" id="addTripModal">
+  <div class="modal-content">
+    <div class="modal-header">Add New Trip</div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tripDate">Trip Date</label>
+          <input type="date" id="tripDate" class="form-control" value="">
+        </div>
+        <div class="form-group">
+          <label for="spxId">SPX ID</label>
+          <input type="text" id="spxId" class="form-control" placeholder="Enter SPX ID">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="pickupLocation">Pickup Location</label>
+          <input type="text" id="pickupLocation" class="form-control" placeholder="Enter pickup location">
+        </div>
+        <div class="form-group">
+          <label for="destinationHub">Destination Hub</label>
+          <input type="text" id="destinationHub" class="form-control" placeholder="Enter destination hub">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tripOperator">Operator</label>
+          <select id="tripOperator" class="form-control">
+            <option value="">Select Operator</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tripDriver">Driver</label>
+          <select id="tripDriver" class="form-control" disabled>
+            <option value="">Select Driver (Select Operator First)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tripPlate">License Plate</label>
+          <input type="text" id="tripPlate" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label for="tripVehicleType">Vehicle Type</label>
+          <input type="text" id="tripVehicleType" class="form-control" readonly>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fuelCost">Fuel Cost (₱)</label>
+          <input type="number" step="0.01" id="fuelCost" class="form-control" placeholder="0.00" value="0">
+        </div>
+        <div class="form-group">
+          <label for="parkingCost">Parking Cost (₱)</label>
+          <input type="number" step="0.01" id="parkingCost" class="form-control" placeholder="0.00" value="0">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tollsCost">Tolls Cost (₱)</label>
+          <input type="number" step="0.01" id="tollsCost" class="form-control" placeholder="0.00" value="0">
+        </div>
+        <div class="form-group">
+          <label for="documentStatus">Document Status</label>
+          <select id="documentStatus" class="form-control">
+            <option value="Pending">Pending</option>
+            <option value="Sent">Sent</option>
+            <option value="Paid">Paid</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="secondTrip">Second Trip</label>
+          <select id="secondTrip" class="form-control">
+            <option value="true">Yes</option>
+            <option value="false" selected>No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelTripBtn">Cancel</button>
+      <button class="btn btn-success" id="submitTripBtn">Add Trip</button>
+    </div>
+  </div>
+</div>
+
+<!-- Second Trip Modal -->
+<div class="modal" id="secondTripModal">
+  <div class="modal-content">
+    <div class="modal-header">Second Trip Costs</div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="secondFuelCost">Additional Fuel Cost (₱)</label>
+          <input type="number" step="0.01" id="secondFuelCost" class="form-control" value="0">
+        </div>
+        <div class="form-group">
+          <label for="secondParkingCost">Additional Parking Cost (₱)</label>
+          <input type="number" step="0.01" id="secondParkingCost" class="form-control" value="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="secondTollsCost">Additional Tolls Cost (₱)</label>
+          <input type="number" step="0.01" id="secondTollsCost" class="form-control" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelSecondTripBtn">Cancel</button>
+      <button class="btn btn-success" id="saveSecondTripBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Application state
+  const state = {
+    trucks: [],
+    trips: [],
+    nextId: 101,
+    nextTripId: 1001,
+    activityLog: [],
+    vehicleTypeChart: null,
+    costChart: null,
+    tripPage: {
+      currentPage: 1,
+      pageSize: 20,
+      totalPages: 1
+    }
+  };
+
+  // DOM Elements
+  const elements = {
+    datetime: document.getElementById('datetime'),
+    totalTrucks: document.getElementById('totalTrucks'),
+    activeTrucks: document.getElementById('activeTrucks'),
+    inactiveTrucks: document.getElementById('inactiveTrucks'),
+    totalOperators: document.getElementById('totalOperators'),
+    totalDrivers: document.getElementById('totalDrivers'),
+    statusText: document.getElementById('statusText'),
+    truckListBody: document.getElementById('truckListBody'),
+    logContent: document.getElementById('logContent'),
+    vehicleTypeChart: document.getElementById('vehicleTypeChart'),
+    costChart: document.getElementById('costChart'),
+    addTruckModal: document.getElementById('addTruckModal'),
+    addTripModal: document.getElementById('addTripModal'),
+    secondTripModal: document.getElementById('secondTripModal'),
+    licensePlate: document.getElementById('licensePlate'),
+    operatorName: document.getElementById('operatorName'),
+    driverName: document.getElementById('driverName'),
+    bankAccount: document.getElementById('bankAccount'),
+    phoneNumber: document.getElementById('phoneNumber'),
+    tabs: document.querySelectorAll('.tab'),
+    tabContents: document.querySelectorAll('.tab-content'),
+    excelDataBody: document.getElementById('excelDataBody'),
+    addTripBtn: document.getElementById('addTripBtn'),
+    tripOperator: document.getElementById('tripOperator'),
+    tripDriver: document.getElementById('tripDriver'),
+    tripPlate: document.getElementById('tripPlate'),
+    tripVehicleType: document.getElementById('tripVehicleType'),
+    truckRate: document.getElementById('truckRate'),
+    vehicleTypeSelect: document.getElementById('vehicleType'),
+    initTimestamp: document.getElementById('initTimestamp'),
+    secondFuelCost: document.getElementById('secondFuelCost'),
+    secondParkingCost: document.getElementById('secondParkingCost'),
+    secondTollsCost: document.getElementById('secondTollsCost'),
+    saveSecondTripBtn: document.getElementById('saveSecondTripBtn'),
+    cancelSecondTripBtn: document.getElementById('cancelSecondTripBtn'),
+    soaDateFrom: document.getElementById('soaDateFrom'),
+    soaDateTo: document.getElementById('soaDateTo'),
+    soaOperator: document.getElementById('soaOperator'),
+    generateSOA: document.getElementById('generateSOA'),
+    downloadSOA: document.getElementById('downloadSOA'),
+    prevPageBtn: document.getElementById('prevPageBtn'),
+    nextPageBtn: document.getElementById('nextPageBtn'),
+    pageInfo: document.getElementById('pageInfo'),
+    tripPagination: document.getElementById('tripPagination'),
+    tripLoading: document.getElementById('tripLoading'),
+    truckLoading: document.getElementById('truckLoading'),
+    inactiveCount: document.getElementById('inactiveCount'),
+    inactiveTrucksList: document.getElementById('inactiveTrucksList'),
+    totalExpenses: document.getElementById('totalExpenses')
+  };
+
+  // Debounce function for performance
+  function debounce(func, wait) {
+    let timeout;
+    return function() {
+      const context = this;
+      const args = arguments;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        func.apply(context, args);
+      }, wait);
+    };
+  }
+
+  // Save state to localStorage with debouncing
+  const saveState = debounce(function() {
+    const stateToSave = {
+      trucks: state.trucks,
+      trips: state.trips,
+      nextId: state.nextId,
+      nextTripId: state.nextTripId,
+      activityLog: state.activityLog
+    };
+    localStorage.setItem('tdrsState', JSON.stringify(stateToSave));
+  }, 500);
+
+  // Load state from localStorage
+  function loadState() {
+    const savedState = localStorage.getItem('tdrsState');
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      state.trucks = parsedState.trucks || [];
+      state.trips = parsedState.trips || [];
+      state.nextId = parsedState.nextId || 101;
+      state.nextTripId = parsedState.nextTripId || 1001;
+      state.activityLog = parsedState.activityLog || [];
+
+      // Restore activity log UI
+      state.activityLog.forEach(entry => {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<span class="log-timestamp">[${entry.timestamp}]</span><span>${entry.message}</span>`;
+        elements.logContent.appendChild(logEntry);
+      });
+
+      return true;
+    }
+    return false;
+  }
+
+  // Initialize the application
+  function init() {
+    setupEventListeners();
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // Try to load state from localStorage
+    const stateLoaded = loadState();
+
+    renderTruckList();
+    updateStatistics();
+    renderCharts();
+    renderInactiveTrucks();
+
+    // Set initialization timestamp
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+    elements.initTimestamp.textContent = `[${timestamp}]`;
+
+    if (!stateLoaded) {
+      logActivity('System initialized - Ready to track trucks');
+    }
+
+    // Set up operator change listener
+    elements.tripOperator.addEventListener('change', updateDriversForOperator);
+
+    // Set up vehicle type change listener for rate calculation
+    elements.vehicleTypeSelect.addEventListener('change', updateTruckRate);
+
+    // Initialize SOA functionality
+    initSOA();
+
+    // Add backup button event listener
+    document.getElementById('backupBtn').addEventListener('click', backupData);
+  }
+
+  function setupEventListeners() {
+    elements.tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabId = tab.getAttribute('data-tab');
+        elements.tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        elements.tabContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === `${tabId}-tab`) content.classList.add('active');
+        });
+        if (tabId === 'excel') renderExcelTable();
+        if (tabId === 'soa') initSOA();
+        if (tabId === 'dashboard') renderInactiveTrucks();
+      });
+    });
+
+    document.getElementById('addTruckBtn').addEventListener('click', () => {
+      elements.licensePlate.value = '';
+      elements.operatorName.value = '';
+      elements.driverName.value = '';
+      elements.bankAccount.value = '';
+      elements.phoneNumber.value = '';
+      document.getElementById('statusActive').checked = true;
+      elements.vehicleTypeSelect.value = '6 WCV';
+      updateTruckRate(); // Set initial rate
+      elements.addTruckModal.style.display = 'flex';
+    });
+
+    document.getElementById('exportDataBtn').addEventListener('click', exportData);
+    document.getElementById('refreshBtn').addEventListener('click', refreshDashboard);
+    document.getElementById('clearLogBtn').addEventListener('click', clearLog);
+    document.getElementById('addTripBtn').addEventListener('click', openAddTripModal);
+    document.getElementById('addTruckFromList').addEventListener('click', () => {
+      document.getElementById('addTruckBtn').click();
+    });
+    document.getElementById('addTripFromList').addEventListener('click', () => {
+      document.getElementById('addTripBtn').click();
+    });
+
+    document.getElementById('cancelAddBtn').addEventListener('click', () => {
+      elements.addTruckModal.style.display = 'none';
+    });
+    document.getElementById('submitAddBtn').addEventListener('click', addTruck);
+
+    document.getElementById('cancelTripBtn').addEventListener('click', () => {
+      elements.addTripModal.style.display = 'none';
+    });
+    document.getElementById('submitTripBtn').addEventListener('click', addTrip);
+
+    // Second trip modal buttons
+    elements.cancelSecondTripBtn.addEventListener('click', () => {
+      elements.secondTripModal.style.display = 'none';
+    });
+    elements.saveSecondTripBtn.addEventListener('click', saveSecondTripCosts);
+
+    // Modal close on click outside
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      });
+    });
+
+    // Truck row select and actions (delegation)
+    elements.truckListBody.addEventListener('click', function (e) {
+      const row = e.target.closest('tr');
+      if (!row) return;
+
+      // Toggle button
+      if (e.target.closest('.toggle-btn')) {
+        const truckId = parseInt(row.getAttribute('data-id'));
+        toggleTruckStatus(truckId);
+      }
+      // Delete button
+      else if (e.target.closest('.delete-btn')) {
+        const truckId = parseInt(e.target.closest('.delete-btn').dataset.id);
+        deleteTruck(truckId);
+      }
+      // Select row
+      else {
+        [...elements.truckListBody.children].forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+      }
+    });
+
+    // Listen for second trip edit button clicks
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.edit-second-trip')) {
+        const btn = e.target.closest('.edit-second-trip');
+        const index = parseInt(btn.dataset.index);
+        openSecondTripModal(index);
+      }
+    });
+
+    // Pagination event listeners
+    elements.prevPageBtn.addEventListener('click', () => {
+      state.tripPage.currentPage--;
+      renderExcelTable();
+    });
+
+    elements.nextPageBtn.addEventListener('click', () => {
+      state.tripPage.currentPage++;
+      renderExcelTable();
+    });
+  }
+
+  function createTruckRow(truck) {
+    const operatorInitials = truck.operator.split(' ').map(name => name[0]).join('').toUpperCase();
+    const driverInitials = truck.driver.split(' ').map(name => name[0]).join('').toUpperCase();
+    const row = document.createElement('tr');
+    row.setAttribute('data-id', truck.id);
+    row.innerHTML = `
+      <td>${truck.id}</td>
+      <td>${truck.plate}</td>
+      <td>
+        <div class="operator-info">
+          <div class="operator-avatar">${operatorInitials}</div><span>${truck.operator}</span>
+        </div>
+      </td>
+      <td>
+        <div class="driver-info">
+          <div class="driver-avatar">${driverInitials}</div><span>${truck.driver}</span>
+        </div>
+      </td>
+      <td>
+        <span class="${truck.vehicleType === '6 WCV' ? 'wcv6-badge' : 'wcv4-badge'}">${truck.vehicleType}</span>
+      </td>
+      <td>${truck.bankAccount}</td>
+      <td>${truck.phoneNumber}</td>
+      <td class="rate-cell">₱${truck.rate.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+      <td>
+        <span class="status-badge ${truck.status === 'Active' ? 'status-active' : 'status-inactive'}">${truck.status}</span>
+      </td>
+      <td>
+        <button class="toggle-btn ${truck.status === 'Active' ? 'toggle-active' : 'toggle-inactive'}">
+          <i class="fas ${truck.status === 'Active' ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
+          ${truck.status === 'Active' ? 'Set Inactive' : 'Set Active'}
+        </button>
+        <button class="delete-btn" data-id="${truck.id}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    return row;
+  }
+
+  // Render inactive trucks in the dashboard
+  function renderInactiveTrucks() {
+    elements.inactiveTrucksList.innerHTML = '';
+
+    const inactiveTrucks = state.trucks.filter(truck => truck.status === 'Inactive');
+
+    if (inactiveTrucks.length === 0) {
+      elements.inactiveTrucksList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-truck-loading"></i>
+          <h3>No Inactive Trucks</h3>
+          <p>All trucks are currently active</p>
+        </div>
+      `;
+      elements.inactiveCount.textContent = "0 Trucks";
+      return;
+    }
+
+    elements.inactiveCount.textContent = `${inactiveTrucks.length} Truck${inactiveTrucks.length > 1 ? 's' : ''}`;
+
+    inactiveTrucks.forEach(truck => {
+      const operatorInitials = truck.operator.split(' ').map(name => name[0]).join('').toUpperCase();
+
+      const truckEl = document.createElement('div');
+      truckEl.className = 'inactive-truck';
+      truckEl.innerHTML = `
+        <div class="truck-info">
+          <div class="truck-avatar">${operatorInitials}</div>
+          <div class="truck-details">
+            <div class="truck-plate">${truck.plate}</div>
+            <div class="truck-operator">${truck.operator}</div>
+          </div>
+        </div>
+        <button class="reactivate-btn" data-id="${truck.id}">
+          <i class="fas fa-toggle-on"></i> Reactivate
+        </button>
+      `;
+
+      elements.inactiveTrucksList.appendChild(truckEl);
+    });
+
+    // Add event listeners for reactivate buttons
+    document.querySelectorAll('.reactivate-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const truckId = parseInt(this.dataset.id);
+        reactivateTruck(truckId);
+      });
+    });
+  }
+
+  // Reactivate an inactive truck
+  function reactivateTruck(truckId) {
+    const truck = state.trucks.find(t => t.id === truckId);
+    if (!truck) return;
+
+    truck.status = 'Active';
+    logActivity(`Truck #${truckId} reactivated`);
+
+    renderTruckList();
+    renderInactiveTrucks();
+    updateStatistics();
+    saveState();
+  }
+
+  // Update truck rate based on vehicle type
+  function updateTruckRate() {
+    const vehicleType = elements.vehicleTypeSelect.value;
+    let rate = 0;
+    if (vehicleType === '6 WCV') {
+      rate = 3166.67;
+    } else if (vehicleType === '4 WCV') {
+      rate = 2833.33;
+    }
+    elements.truckRate.value = rate.toFixed(2);
+  }
+
+  function renderTruckList() {
+    elements.truckListBody.innerHTML = '';
+    if (state.trucks.length === 0) {
+      elements.truckListBody.innerHTML = `
+        <tr>
+          <td colspan="10" class="empty-state">
+            <i class="fas fa-truck-loading"></i>
+            <h3>No Trucks Found</h3>
+            <p>You haven't added any trucks yet. Click the button below to get started.</p>
+            <button class="btn btn-operator" id="addTruckFromList">
+              <i class="fas fa-plus"></i> Add Your First Truck
+            </button>
+          </td>
+        </tr>
+      `;
+      document.getElementById('addTruckFromList').addEventListener('click', () => {
+        document.getElementById('addTruckBtn').click();
+      });
+      return;
+    }
+
+    // Show loading spinner
+    elements.truckLoading.style.display = 'block';
+
+    // Render with a small delay to allow UI to update
+    setTimeout(() => {
+      state.trucks.forEach(truck => {
+        const newRow = createTruckRow(truck);
+        elements.truckListBody.appendChild(newRow);
+      });
+
+      // Hide loading spinner
+      elements.truckLoading.style.display = 'none';
+    }, 50);
+  }
+
+  function toggleTruckStatus(truckId) {
+    const truck = state.trucks.find(t => t.id === truckId);
+    if (!truck) return;
+    truck.status = truck.status === 'Active' ? 'Inactive' : 'Active';
+    renderTruckList();
+    renderInactiveTrucks();
+    updateStatistics();
+    updateCharts();
+    logActivity(`Truck #${truckId} set to ${truck.status}`);
+    saveState(); // Save after change
+  }
+
+  function deleteTruck(truckId) {
+    if (!confirm(`Are you sure you want to delete truck #${truckId}? This will also remove all associated trips.`)) return;
+
+    const truckIndex = state.trucks.findIndex(t => t.id === truckId);
+    if (truckIndex === -1) return;
+
+    const truck = state.trucks[truckIndex];
+
+    // Remove associated trips
+    state.trips = state.trips.filter(trip => trip.plate !== truck.plate);
+
+    // Remove truck
+    state.trucks.splice(truckIndex, 1);
+
+    renderTruckList();
+    renderInactiveTrucks();
+    if (document.getElementById('excel-tab').classList.contains('active')) {
+      renderExcelTable();
+    }
+    updateStatistics();
+    updateCharts();
+    logActivity(`Deleted truck #${truckId} and its associated trips`);
+    saveState(); // Save after change
+  }
+
+  // Update drivers dropdown based on selected operator (only active trucks)
+  function updateDriversForOperator() {
+    const operatorName = elements.tripOperator.value;
+    const driverSelect = elements.tripDriver;
+
+    // Clear existing options except the first one
+    driverSelect.innerHTML = '<option value="">Select Driver</option>';
+
+    if (!operatorName) {
+      driverSelect.disabled = true;
+      elements.tripPlate.value = '';
+      elements.tripVehicleType.value = '';
+      return;
+    }
+
+    // Enable driver selection
+    driverSelect.disabled = false;
+
+    // Get all active trucks for this operator
+    const trucksForOperator = state.trucks.filter(truck =>
+      truck.operator === operatorName &&
+      truck.status === 'Active'
+    );
+
+    // Extract unique drivers from active trucks
+    const uniqueDrivers = [...new Set(trucksForOperator.map(truck => truck.driver))];
+
+    // Add drivers to the dropdown
+    uniqueDrivers.forEach(driver => {
+      const option = document.createElement('option');
+      option.value = driver;
+      option.textContent = driver;
+      driverSelect.appendChild(option);
+    });
+
+    // Add event listener for driver change
+    driverSelect.addEventListener('change', updatePlateFromDriver);
+  }
+
+  // Automatically update plate number when driver is selected
+  function updatePlateFromDriver() {
+    const selectedDriver = elements.tripDriver.value;
+    const selectedOperator = elements.tripOperator.value;
+
+    if (!selectedDriver || !selectedOperator) {
+      elements.tripPlate.value = '';
+      elements.tripVehicleType.value = '';
+      return;
+    }
+
+    // Find active truck for selected operator and driver
+    const truck = state.trucks.find(t =>
+      t.operator === selectedOperator &&
+      t.driver === selectedDriver &&
+      t.status === 'Active'
+    );
+
+    if (truck) {
+      elements.tripPlate.value = truck.plate;
+      elements.tripVehicleType.value = truck.vehicleType;
+    } else {
+      elements.tripPlate.value = '';
+      elements.tripVehicleType.value = '';
+    }
+  }
+
+  function renderExcelTable() {
+    elements.excelDataBody.innerHTML = '';
+    elements.tripLoading.style.display = 'block';
+
+    if (state.trips.length === 0) {
+      elements.tripLoading.style.display = 'none';
+      elements.excelDataBody.innerHTML = `
+        <tr>
+          <td colspan="17" class="empty-state">
+            <i class="fas fa-road"></i>
+            <h3>No Trip Records</h3>
+            <p>You haven't recorded any trips yet. Add your first trip to start tracking.</p>
+            <button class="btn btn-success" id="addTripFromList">
+              <i class="fas fa-plus"></i> Add Your First Trip
+            </button>
+          </td>
+        </tr>
+      `;
+      document.getElementById('addTripFromList').addEventListener('click', () => {
+        document.getElementById('addTripBtn').click();
+      });
+      elements.tripPagination.style.display = 'none';
+      return;
+    }
+
+    // Calculate pagination
+    state.tripPage.totalPages = Math.ceil(state.trips.length / state.tripPage.pageSize);
+    const startIndex = (state.tripPage.currentPage - 1) * state.tripPage.pageSize;
+    const endIndex = Math.min(startIndex + state.tripPage.pageSize, state.trips.length);
+    const tripsToShow = state.trips.slice(startIndex, endIndex);
+
+    // Update pagination controls
+    elements.pageInfo.textContent = `Page ${state.tripPage.currentPage} of ${state.tripPage.totalPages}`;
+    elements.prevPageBtn.disabled = state.tripPage.currentPage === 1;
+    elements.nextPageBtn.disabled = state.tripPage.currentPage === state.tripPage.totalPages;
+    elements.tripPagination.style.display = 'flex';
+
+    // Render with a small delay to allow UI to update
+    setTimeout(() => {
+      tripsToShow.forEach((trip, index) => {
+        const globalIndex = startIndex + index;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${trip.spxId}</td>
+          <td><input type="date" class="editable-cell" value="${trip.tripDate}" data-field="tripDate" data-index="${globalIndex}"></td>
+          <td><input type="text" class="editable-cell" value="${trip.pickup}" data-field="pickup" data-index="${globalIndex}"></td>
+          <td><input type="text" class="editable-cell" value="${trip.destination}" data-field="destination" data-index="${globalIndex}"></td>
+          <td>${trip.operator}</td>
+          <td>${trip.driver}</td>
+          <td class="highlight-cell">${trip.plate}</td>
+          <td>
+            <span class="${trip.vehicleType === '6 WCV' ? 'wcv6-badge' : 'wcv4-badge'}">${trip.vehicleType}</span>
+          </td>
+          <td class="rate-cell">₱${trip.rate.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td><input type="number" step="0.01" class="editable-cell" value="${trip.fuel}" data-field="fuel" data-index="${globalIndex}"></td>
+          <td><input type="number" step="0.01" class="editable-cell" value="${trip.parking}" data-field="parking" data-index="${globalIndex}"></td>
+          <td><input type="number" step="0.01" class="editable-cell" value="${trip.tolls}" data-field="tolls" data-index="${globalIndex}"></td>
+          <td class="rate-cell">₱${(trip.secondFuel + trip.secondParking + trip.secondTolls).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="rate-cell">₱${trip.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td>
+            <select class="editable-select" data-field="documents" data-index="${globalIndex}">
+              <option value="Pending" ${trip.documents === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="Sent" ${trip.documents === 'Sent' ? 'selected' : ''}>Sent</option>
+              <option value="Paid" ${trip.documents === 'Paid' ? 'selected' : ''}>Paid</option>
+              <option value="Overdue" ${trip.documents === 'Overdue' ? 'selected' : ''}>Overdue</option>
+            </select>
+          </td>
+          <td>
+            <select class="editable-select" data-field="secondTrip" data-index="${globalIndex}">
+              <option value="true" ${trip.secondTrip ? 'selected' : ''}>Yes</option>
+              <option value="false" ${!trip.secondTrip ? 'selected' : ''}>No</option>
+            </select>
+          </td>
+          <td>
+            <button class="delete-btn" data-delete-index="${globalIndex}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+
+        // Add Edit button for second trip if enabled
+        if (trip.secondTrip) {
+          const secondTripCell = tr.querySelector('td:nth-child(13)');
+          secondTripCell.innerHTML = `
+            <button class="btn btn-warning edit-second-trip" data-index="${globalIndex}">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          `;
+        }
+
+        elements.excelDataBody.appendChild(tr);
+      });
+
+      // Delegated inputs and select events for editing
+      elements.excelDataBody.querySelectorAll('.editable-cell, .editable-select').forEach(input => {
+        input.addEventListener('change', function () {
+          const idx = parseInt(this.dataset.index);
+          const field = this.dataset.field;
+          let value = this.value;
+
+          if (field === 'secondTrip') {
+            value = value === 'true';
+            state.trips[idx].secondTrip = value;
+
+            // Clear second trip costs if set to No
+            if (!value) {
+              state.trips[idx].secondFuel = 0;
+              state.trips[idx].secondParking = 0;
+              state.trips[idx].secondTolls = 0;
+            }
+
+            // Recalculate total
+            recalculateTripTotal(idx);
+            renderExcelTable();
+            saveState(); // Save after change
+            return;
+          }
+
+          if (field === 'documents') {
+            state.trips[idx][field] = value;
+            saveState(); // Save after change
+            return;
+          }
+
+          // For number fields
+          if (field === 'fuel' || field === 'parking' || field === 'tolls') {
+            value = parseFloat(value) || 0;
+          }
+
+          state.trips[idx][field] = value;
+          recalculateTripTotal(idx);
+
+          // Re-render to update totals
+          renderExcelTable();
+          saveState(); // Save after change
+        });
+      });
+
+      // Delete trip buttons
+      elements.excelDataBody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const idx = parseInt(this.dataset.deleteIndex);
+          const trip = state.trips[idx];
+          if (confirm(`Are you sure you want to delete trip ${trip.spxId}?`)) {
+            state.trips.splice(idx, 1);
+            logActivity(`Deleted trip ${trip.spxId}`);
+            renderExcelTable();
+            updateCharts();
+            saveState(); // Save after change
+          }
+        });
+      });
+
+      // Hide loading spinner
+      elements.tripLoading.style.display = 'none';
+    }, 50);
+  }
+
+  function recalculateTripTotal(index) {
+    const trip = state.trips[index];
+    trip.total = trip.rate +
+      parseFloat(trip.fuel) +
+      parseFloat(trip.parking) +
+      parseFloat(trip.tolls) +
+      parseFloat(trip.secondFuel) +
+      parseFloat(trip.secondParking) +
+      parseFloat(trip.secondTolls);
+  }
+
+  function updateDateTime() {
+    const now = new Date();
+    const options = {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    };
+    elements.datetime.textContent = now.toLocaleDateString('en-US', options);
+  }
+
+  function renderCharts() {
+    // Destroy existing charts if they exist
+    if (state.vehicleTypeChart) {
+      state.vehicleTypeChart.destroy();
+    }
+    if (state.costChart) {
+      state.costChart.destroy();
+    }
+
+    const vehicleTypeCtx = document.getElementById('vehicleTypeChart').getContext('2d');
+    state.vehicleTypeChart = new Chart(vehicleTypeCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['6 WCV', '4 WCV'],
+        datasets: [{
+          data: [0, 0],
+          backgroundColor: [
+            getComputedStyle(document.documentElement).getPropertyValue('--wcv6-color'),
+            getComputedStyle(document.documentElement).getPropertyValue('--wcv4-color')
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Vehicle Type Distribution',
+            color: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+            font: { size: 14 }
+          },
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+              font: { size: 12 }
+            }
+          }
+        },
+        cutout: '60%',
+        animation: {
+          duration: 800,
+          easing: 'easeOutQuart'
+        }
+      }
+    });
+
+    const costCtx = document.getElementById('costChart').getContext('2d');
+    state.costChart = new Chart(costCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Fuel', 'Parking', 'Tolls'],
+        datasets: [{
+          label: 'Average Cost (₱)',
+          data: [0, 0, 0],
+          backgroundColor: ['#f39c12', '#3498db', '#27ae60'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Trip Cost Analysis',
+            color: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+            font: { size: 14 }
+          },
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+              callback: function (value) { return '₱' + value; },
+              font: { size: 12 }
+            },
+            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+          },
+          x: {
+            ticks: {
+              color: getComputedStyle(document.documentElement).getPropertyValue('--text-color'),
+              font: { size: 12 }
+            },
+            grid: { display: false }
+          }
+        },
+        animation: {
+          duration: 800,
+          easing: 'easeOutQuart'
+        }
+      }
+    });
+
+    updateCharts();
+  }
+
+  function refreshDashboard() {
+    updateStatistics();
+    updateCharts();
+    renderInactiveTrucks();
+    logActivity('Dashboard refreshed');
+  }
+
+  function addTruck() {
+    const plate = elements.licensePlate.value.trim();
+    const operator = elements.operatorName.value.trim();
+    const driver = elements.driverName.value.trim();
+    const bankAccount = elements.bankAccount.value.trim();
+    const phoneNumber = elements.phoneNumber.value.trim();
+    const vehicleType = document.getElementById('vehicleType').value;
+    const rate = parseFloat(elements.truckRate.value);
+    const status = document.querySelector('input[name="truckStatus"]:checked').value;
+
+    if (!plate) return alert('License plate is required!');
+    if (!operator) return alert('Operator name is required!');
+    if (!driver) return alert('Driver name is required!');
+
+    const newId = state.nextId++;
+    const newTruck = { id: newId, plate, operator, driver, bankAccount, phoneNumber, vehicleType, rate, status };
+    state.trucks.push(newTruck);
+    renderTruckList();
+    renderInactiveTrucks();
+    updateStatistics();
+    updateCharts();
+    logActivity(`Added truck #${newId} - Operator: ${operator}, Driver: ${driver}, Plate: ${plate}`);
+    elements.addTruckModal.style.display = 'none';
+    alert('Truck added successfully!');
+    saveState(); // Save after change
+  }
+
+  function openAddTripModal() {
+    // Reset modal fields
+    document.getElementById('tripDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('spxId').value = '';
+    document.getElementById('pickupLocation').value = '';
+    document.getElementById('destinationHub').value = '';
+
+    // Populate operators dropdown
+    const operatorSelect = elements.tripOperator;
+    operatorSelect.innerHTML = '<option value="">Select Operator</option>';
+    const uniqueOperators = [...new Set(state.trucks.map(t => t.operator))];
+    uniqueOperators.forEach(operator => {
+      const option = document.createElement('option');
+      option.value = operator;
+      option.textContent = operator;
+      operatorSelect.appendChild(option);
+    });
+
+    elements.tripDriver.innerHTML = '<option value="">Select Driver (Select Operator First)</option>';
+    elements.tripDriver.disabled = true;
+    elements.tripPlate.value = '';
+    elements.tripVehicleType.value = '';
+    document.getElementById('fuelCost').value = 0;
+    document.getElementById('parkingCost').value = 0;
+    document.getElementById('tollsCost').value = 0;
+    document.getElementById('documentStatus').value = 'Pending';
+    document.getElementById('secondTrip').value = 'false';
+
+    elements.addTripModal.style.display = 'flex';
+  }
+
+  function addTrip() {
+    const spxId = document.getElementById('spxId').value.trim();
+    const tripDate = document.getElementById('tripDate').value;
+    const pickup = document.getElementById('pickupLocation').value.trim();
+    const destination = document.getElementById('destinationHub').value.trim();
+    const operator = elements.tripOperator.value;
+    const driver = elements.tripDriver.value;
+    const plate = elements.tripPlate.value;
+    const vehicleType = elements.tripVehicleType.value;
+    const fuel = parseFloat(document.getElementById('fuelCost').value) || 0;
+    const parking = parseFloat(document.getElementById('parkingCost').value) || 0;
+    const tolls = parseFloat(document.getElementById('tollsCost').value) || 0;
+    const documents = document.getElementById('documentStatus').value;
+    const secondTrip = document.getElementById('secondTrip').value === 'true';
+
+    if (!spxId || !tripDate || !pickup || !destination || !operator || !driver || !plate) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const truck = state.trucks.find(t => t.plate === plate);
+    const contact = truck ? truck.phoneNumber : 'N/A';
+    const rate = truck ? truck.rate : (vehicleType === '6 WCV' ? 3166.67 : 2833.33);
+    const total = rate + fuel + parking + tolls;
+
+    const newTrip = {
+      id: state.nextTripId++,
+      spxId,
+      tripDate,
+      pickup,
+      destination,
+      operator,
+      driver,
+      contact,
+      plate,
+      vehicleType,
+      rate,
+      fuel,
+      parking,
+      tolls,
+      secondFuel: 0,
+      secondParking: 0,
+      secondTolls: 0,
+      total,
+      documents,
+      secondTrip
+    };
+
+    state.trips.push(newTrip);
+    renderExcelTable();
+    updateCharts();
+    logActivity(`Added trip #${newTrip.id} - SPX ID: ${spxId}, Plate: ${plate}`);
+    elements.addTripModal.style.display = 'none';
+    alert('Trip added successfully!');
+    saveState(); // Save after change
+  }
+
+  function openSecondTripModal(index) {
+    const trip = state.trips[index];
+    document.getElementById('secondFuelCost').value = trip.secondFuel;
+    document.getElementById('secondParkingCost').value = trip.secondParking;
+    document.getElementById('secondTollsCost').value = trip.secondTolls;
+
+    // Store current trip index
+    elements.saveSecondTripBtn.dataset.index = index;
+
+    elements.secondTripModal.style.display = 'flex';
+  }
+
+  function saveSecondTripCosts() {
+    const index = parseInt(elements.saveSecondTripBtn.dataset.index);
+    const trip = state.trips[index];
+
+    trip.secondFuel = parseFloat(elements.secondFuelCost.value) || 0;
+    trip.secondParking = parseFloat(elements.secondParkingCost.value) || 0;
+    trip.secondTolls = parseFloat(elements.secondTollsCost.value) || 0;
+
+    // Update total
+    recalculateTripTotal(index);
+
+    renderExcelTable();
+    elements.secondTripModal.style.display = 'none';
+
+    logActivity(`Updated second trip costs for trip ${trip.spxId}`);
+    saveState(); // Save after change
+  }
+
+  function updateStatistics() {
+    const totalTrucks = state.trucks.length;
+    const activeTrucks = state.trucks.filter(t => t.status === 'Active').length;
+    const inactiveTrucks = totalTrucks - activeTrucks;
+    const uniqueOperators = new Set(state.trucks.map(t => t.operator));
+    const totalOperators = uniqueOperators.size;
+    const uniqueDrivers = new Set(state.trucks.map(t => t.driver));
+    const totalDrivers = uniqueDrivers.size;
+
+    elements.totalTrucks.textContent = totalTrucks;
+    elements.activeTrucks.textContent = activeTrucks;
+    elements.inactiveTrucks.textContent = inactiveTrucks;
+    elements.totalOperators.textContent = totalOperators;
+    elements.totalDrivers.textContent = totalDrivers;
+    elements.statusText.textContent = `Total Trucks: ${totalTrucks} | Active: ${activeTrucks} | Operators: ${totalOperators} | Drivers: ${totalDrivers}`;
+  }
+
+  function updateCharts() {
+    if (!state.vehicleTypeChart || !state.costChart) return;
+    const wcv6Count = state.trucks.filter(t => t.vehicleType === '6 WCV').length;
+    const wcv4Count = state.trucks.length - wcv6Count;
+    state.vehicleTypeChart.data.datasets[0].data = [wcv6Count, wcv4Count];
+    state.vehicleTypeChart.update();
+    if (state.trips.length > 0) {
+      const fuelTotal = state.trips.reduce((sum, trip) => sum + parseFloat(trip.fuel), 0);
+      const parkingTotal = state.trips.reduce((sum, trip) => sum + parseFloat(trip.parking), 0);
+      const tollsTotal = state.trips.reduce((sum, trip) => sum + parseFloat(trip.tolls), 0);
+      const fuelAvg = fuelTotal / state.trips.length;
+      const parkingAvg = parkingTotal / state.trips.length;
+      const tollsAvg = tollsTotal / state.trips.length;
+      state.costChart.data.datasets[0].data = [fuelAvg, parkingAvg, tollsAvg];
+      state.costChart.update();
+    }
+  }
+
+  function exportData() {
+    if (state.trucks.length === 0) return alert('There is no data to export');
+    let csvContent = "ID,License Plate,Operator,Driver,Vehicle Type,Rate,Status\n";
+    state.trucks.forEach(truck => {
+      csvContent += `${truck.id},"${truck.plate}","${truck.operator}","${truck.driver}","${truck.vehicleType}",${truck.rate},${truck.status}\n`;
+    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+    link.setAttribute('href', url);
+    link.setAttribute('download', `truck_export_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    logActivity(`Exported truck data to CSV file`);
+    alert('Data exported successfully!');
+  }
+
+  function logActivity(message) {
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+
+    // Check for duplicates
+    const isDuplicate = state.activityLog.some(
+      entry => entry.message === message && entry.timestamp === timestamp
+    );
+
+    if (isDuplicate) return;
+
+    // Add to state
+    state.activityLog.push({timestamp, message});
+
+    // Add to UI
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+    logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span><span>${message}</span>`;
+    elements.logContent.appendChild(logEntry);
+    elements.logContent.scrollTop = elements.logContent.scrollHeight;
+
+    saveState();
+  }
+
+  function clearLog() {
+    if (confirm('Are you sure you want to clear the activity log?')) {
+      elements.logContent.innerHTML = '';
+      state.activityLog = [];
+      logActivity('Log cleared');
+      saveState(); // Save after change
+    }
+  }
+
+  function backupData() {
+    saveState();
+    alert('Data backup completed successfully!');
+    logActivity('Manual data backup performed');
+  }
+
+  // SOA Functions
+  function initSOA() {
+    // Set date range to current month
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    document.getElementById('soaDateFrom').value = formatDate(firstDay);
+    document.getElementById('soaDateTo').value = formatDate(lastDay);
+
+    // Populate operators dropdown
+    const operatorSelect = elements.soaOperator;
+    operatorSelect.innerHTML = '<option value="">Select Operator</option>';
+
+    // Get unique operators
+    const uniqueOperators = [...new Set(state.trucks.map(t => t.operator))];
+    uniqueOperators.forEach(operator => {
+      const option = document.createElement('option');
+      option.value = operator;
+      option.textContent = operator;
+      operatorSelect.appendChild(option);
+    });
+
+    // Add event listeners
+    elements.generateSOA.addEventListener('click', generateSOA);
+    elements.downloadSOA.addEventListener('click', downloadSOAAsPDF);
+
+    // Add change listeners for cash advance
+    document.getElementById('cashAdvance').addEventListener('change', calculateSOA);
+  }
+
+  // Helper function to format date as YYYY-MM-DD
+  function formatDate(date) {
+    const d = new Date(date);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    const year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+  }
+
+  // Generate SOA with date range
+  function generateSOA() {
+    const operator = elements.soaOperator.value;
+    const dateFrom = document.getElementById('soaDateFrom').value;
+    const dateTo = document.getElementById('soaDateTo').value;
+
+    if (!operator) {
+      alert('Please select an operator');
+      return;
+    }
+
+    if (!dateFrom || !dateTo) {
+      alert('Please select both start and end dates');
+      return;
+    }
+
+    // Filter trips for the selected operator and date range
+    const operatorTrips = state.trips.filter(trip =>
+      trip.operator === operator &&
+      trip.tripDate >= dateFrom &&
+      trip.tripDate <= dateTo
+    );
+
+    // Initialize counts
+    let trips4 = 0;
+    let trips6 = 0;
+    let secondTrips4 = 0;
+    let secondTrips6 = 0;
+    let toll = 0;
+    let parking = 0;
+    let gas = 0;
+
+    // Calculate values from trips
+    operatorTrips.forEach(trip => {
+      if (trip.vehicleType === '4 WCV') {
+        trips4++;
+        if (trip.secondTrip) secondTrips4++;
+      } else if (trip.vehicleType === '6 WCV') {
+        trips6++;
+        if (trip.secondTrip) secondTrips6++;
+      }
+
+      // Include both first and second trip costs
+      toll += parseFloat(trip.tolls) + parseFloat(trip.secondTolls);
+      parking += parseFloat(trip.parking) + parseFloat(trip.secondParking);
+      gas += parseFloat(trip.fuel) + parseFloat(trip.secondFuel);
+    });
+
+    // Update form fields
+    document.getElementById('trips4').value = trips4;
+    document.getElementById('trips6').value = trips6;
+    document.getElementById('secondTrips4').value = secondTrips4;
+    document.getElementById('secondTrips6').value = secondTrips6;
+    document.getElementById('totalTrips').value = trips4 + trips6;
+    document.getElementById('toll').value = `₱${toll.toFixed(2)}`;
+    document.getElementById('parking').value = `₱${parking.toFixed(2)}`;
+    document.getElementById('gas').value = `₱${gas.toFixed(2)}`;
+
+    // Calculate SOA values
+    calculateSOA();
+
+    logActivity(`Generated SOA for ${operator} from ${dateFrom} to ${dateTo}`);
+  }
+
+  function calculateSOA() {
+    // Get input values
+    const trips4 = parseInt(document.getElementById('trips4').value) || 0;
+    const trips6 = parseInt(document.getElementById('trips6').value) || 0;
+    const secondTrips4 = parseInt(document.getElementById('secondTrips4').value) || 0;
+    const secondTrips6 = parseInt(document.getElementById('secondTrips6').value) || 0;
+
+    // Parse expenses (remove currency symbol)
+    const toll = parseFloat(document.getElementById('toll').value.replace('₱', '')) || 0;
+    const parking = parseFloat(document.getElementById('parking').value.replace('₱', '')) || 0;
+    const gas = parseFloat(document.getElementById('gas').value.replace('₱', '')) || 0;
+
+    // Calculate total expenses
+    const totalExpenses = toll + parking + gas;
+    document.getElementById('totalExpenses').value = `₱${totalExpenses.toFixed(2)}`;
+
+    // Get cash advance as a positive number but treat as negative
+    const cashAdvance = parseFloat(document.getElementById('cashAdvance').value) || 0;
+
+    // Calculate totals
+    const rate4 = 2833.33;
+    const rate6 = 3166.67;
+
+    // Calculate amounts for each vehicle type
+    const total4 = (trips4 * rate4) + (secondTrips4 * rate4 * 0.5);
+    const total6 = (trips6 * rate6) + (secondTrips6 * rate6 * 0.5);
+
+    // Calculate total payable (gross earnings minus cash advance)
+    const totalPayable = (total4 + total6) - cashAdvance;
+
+    // Update total fields
+    document.getElementById('total4').value = `₱${total4.toFixed(2)}`;
+    document.getElementById('total6').value = `₱${total6.toFixed(2)}`;
+    document.getElementById('totalPayable').value = `₱${totalPayable.toFixed(2)}`;
+  }
+
+  // Download SOA as PDF
+  function downloadSOAAsPDF() {
+    const operator = elements.soaOperator.value;
+    const dateFrom = document.getElementById('soaDateFrom').value;
+    const dateTo = document.getElementById('soaDateTo').value;
+
+    if (!operator) {
+      alert('Please select an operator and generate SOA first');
+      return;
+    }
+
+    // Format dates for display
+    const displayDateFrom = new Date(dateFrom).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+    const displayDateTo = new Date(dateTo).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    // Get all values from the SOA form
+    const trips4 = document.getElementById('trips4').value;
+    const trips6 = document.getElementById('trips6').value;
+    const secondTrips4 = document.getElementById('secondTrips4').value;
+    const secondTrips6 = document.getElementById('secondTrips6').value;
+    const totalTrips = document.getElementById('totalTrips').value;
+    const toll = document.getElementById('toll').value;
+    const parking = document.getElementById('parking').value;
+    const gas = document.getElementById('gas').value;
+    const totalExpenses = document.getElementById('totalExpenses').value;
+    const cashAdvance = document.getElementById('cashAdvance').value;
+    const total4 = document.getElementById('total4').value;
+    const total6 = document.getElementById('total6').value;
+    const totalPayable = document.getElementById('totalPayable').value;
+
+    // Create a new jsPDF instance
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Set document properties
+    doc.setProperties({
+      title: `SOA for ${operator} - ${displayDateFrom} to ${displayDateTo}`,
+      subject: 'Statement of Account',
+      author: 'TDRS Truck Management System'
+    });
+
+    // Add professional header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(44, 62, 80); // Dark blue
+    doc.text('TDRS - Statement of Account', 105, 20, null, null, 'center');
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Operator: ${operator}`, 20, 30);
+    doc.text(`Period: ${displayDateFrom} to ${displayDateTo}`, 20, 37);
+
+    const now = new Date();
+    const generatedDate = now.toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    doc.text(`Generated: ${generatedDate}`, 20, 44);
+
+    // Draw separator line
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, 48, 195, 48);
+
+    // Add table
+    const startY = 55;
+
+    // Create table data
+    const tableData = [
+      ['Description', 'Amount'],
+      ['4 WCV Trips', trips4],
+      ['6 WCV Trips', trips6],
+      ['4 WCV 2nd Trips', secondTrips4],
+      ['6 WCV 2nd Trips', secondTrips6],
+      ['Total Trips', totalTrips],
+      ['Toll Expenses', toll],
+      ['Parking Expenses', parking],
+      ['Fuel Expenses', gas],
+      ['Total Expenses', totalExpenses],
+      ['Cash Advance', cashAdvance ? `-₱${parseFloat(cashAdvance).toFixed(2)}` : '₱0.00'],
+      ['Total 4 WCV Earnings', total4],
+      ['Total 6 WCV Earnings', total6],
+      ['Total Payable', totalPayable]
+    ];
+
+    // Create table with autoTable
+    doc.autoTable({
+      startY: startY,
+      head: [tableData[0]],
+      body: tableData.slice(1),
+      theme: 'grid',
+      headStyles: {
+        fillColor: [44, 62, 80], // Dark blue
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      bodyStyles: {
+        fontSize: 10
+      },
+      styles: {
+        cellPadding: 3,
+        fontSize: 10,
+        valign: 'middle'
+      },
+      columnStyles: {
+        0: {cellWidth: 120, fontStyle: 'bold'},
+        1: {cellWidth: 60, halign: 'right'}
+      },
+      didParseCell: function(data) {
+        // Style total payable row
+        if (data.row.index === tableData.length - 2) {
+          data.cell.styles.fillColor = [227, 242, 253]; // Light blue
+          data.cell.styles.fontStyle = 'bold';
+        }
+        // Style cash advance row
+        if (data.row.index === 9) {
+          data.cell.styles.textColor = [231, 76, 60]; // Red
+        }
+        // Style header row
+        if (data.row.index === 0) {
+          data.cell.styles.halign = 'center';
+        }
+      },
+      didDrawCell: function(data) {
+        // Highlight total payable
+        if (data.row.index === tableData.length - 2 && data.column.index === 1) {
+          doc.setFillColor(227, 242, 253);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+          doc.text(data.cell.raw, data.cell.x + data.cell.width - 5, data.cell.y + 10, {align: 'right'});
+          return false; // Prevent default rendering
+        }
+      }
+    });
+
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text(`Page ${i} of ${pageCount}`, 105, 285, null, null, 'center');
+      doc.text('Confidential - For internal use only', 105, 290, null, null, 'center');
+    }
+
+    // Save PDF
+    const fileName = `SOA_${operator.replace(/\s+/g, '_')}_${dateFrom}_to_${dateTo}.pdf`;
+    doc.save(fileName);
+
+    logActivity(`Downloaded SOA PDF for ${operator} from ${dateFrom} to ${dateTo}`);
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
